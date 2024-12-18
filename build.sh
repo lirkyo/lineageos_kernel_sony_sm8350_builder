@@ -29,24 +29,27 @@ chmod +x ./antman
 ./antman --patch=glibc
 cd $BASE_PATH
 
+#TWRP
+echo ">clone twrp source"
+git clone --branch twrp-12.1 --depth 1 https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp twrp
+
 #kernel
 echo ">clone kernel source"
-git clone --branch lineage-21 --depth 1 https://github.com/LineageOS/android_kernel_oneplus_sm8350 kernel
+git clone --branch lineage-21 --depth 1 https://github.com/LineageOS/android_kernel_sony_sm8350 kernel
 
-#KernelSU ( <=v0.9.5 only)
-echo ">clone KernelSU and patch the kernel"
-cd kernel
-curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s v0.9.5
+#device
+echo ">clone device source"
+git clone --branch main --depth 1 https://github.com/sonybasement/twrp_android_sony_pdx215 device/sony/pdx215
+
 cd $BASE_PATH
 
 #build
 echo ">build kernel"
-cd kernel
 # 20241001 remove WERROR
-sed -i 's/CONFIG_CC_WERROR=y/# CONFIG_CC_WERROR=y/g' arch/arm64/configs/vendor/lahaina-qgki_defconfig
+sed -i 's/CONFIG_CC_WERROR=y/# CONFIG_CC_WERROR=y/g' arch/arm64/configs/pdx215_defconfig
 export PATH="$BASE_PATH/toolchain/bin:${PATH}"
 MAKE_ARGS="CC=clang O=out ARCH=arm64 LLVM=1 LLVM_IAS=1"
-make $MAKE_ARGS "vendor/lahaina-qgki_defconfig"
+make $MAKE_ARGS "pdx215_defconfig"
 make $MAKE_ARGS -j"$(nproc --all)"
 cd $BASE_PATH
 cp kernel/out/arch/arm64/boot/Image AnyKernel3/
