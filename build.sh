@@ -31,7 +31,7 @@ cd $BASE_PATH
 
 #TWRP
 echo ">clone twrp source"
-git clone --branch twrp-12.1 --depth 1 https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp twrp
+git clone --branch android-12.1 --depth 1 https://github.com/TeamWin/android_bootable_recovery twrp
 
 #kernel
 echo ">clone kernel source"
@@ -39,25 +39,17 @@ git clone --branch lineage-21 --depth 1 https://github.com/LineageOS/android_ker
 
 #device
 echo ">clone device source"
-git clone --branch main --depth 1 https://github.com/sonybasement/twrp_android_sony_pdx215 device/sony/pdx215
+git clone --branch lineage-21 --depth 1 https://github.com/LineageOS/android_device_sony_pdx215 device/sony/pdx215
+git clone --branch lineage-21 --depth 1 https://github.com/LineageOS/android_device_sony_sm8350-common device/sony/sm8350-common
+git clone --branch lineage-21 --depth 1 https://github.com/LineageOS/android_hardware_sony hardware/sony
+
 
 cd $BASE_PATH
-
-#build
-echo ">build kernel"
-# 20241001 remove WERROR
-sed -i 's/CONFIG_CC_WERROR=y/# CONFIG_CC_WERROR=y/g' arch/arm64/configs/pdx215_defconfig
-export PATH="$BASE_PATH/toolchain/bin:${PATH}"
-MAKE_ARGS="CC=clang O=out ARCH=arm64 LLVM=1 LLVM_IAS=1"
-make $MAKE_ARGS "pdx215_defconfig"
-make $MAKE_ARGS -j"$(nproc --all)"
-cd $BASE_PATH
+. build/envsetup.sh
+repopick 6526 6049 5743 5693
+lunch twrp_pdx215-userdebug
+mka bootimage
 cp kernel/out/arch/arm64/boot/Image AnyKernel3/
-
-#create dtb
-echo ">create dtb and dtbo.img"
-cat $(find kernel/out/arch/arm64/boot/dts/vendor/oplus/lemonadev/ -type f -name "*.dtb" | sort) > AnyKernel3/dtb
-python libufdt/utils/src/mkdtboimg.py create AnyKernel3/dtbo.img --page_size=4096 $(find kernel/out/arch/arm64/boot/dts/vendor/oplus/lemonadev/ -type f -name "*.dtbo" | sort)
 
 #create AnyKernel3 zip
 echo ">clean AnyKernel3"
